@@ -1,5 +1,6 @@
 "use client";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { Friend } from "../page";
 import L from "leaflet";
 
 const defaultIcon = L.icon({
@@ -9,10 +10,14 @@ const defaultIcon = L.icon({
     iconAnchor: [12, 41],
 })
 
-export default function Map() {
-    const defaultPosition: [number, number] = [-6.223052232258251, 106.70824398391028]; // set di cbd ciledug as default 
+interface MapProps {
+    friends: Friend[];
+}
+
+export default function Map({ friends }: MapProps) {
+    const defaultPosition: [number, number] = [-6.223958802543582, 106.70812596254999]; // set di cbd ciledug as default 
     return (
-        <div className="w-full h-full rounded-lg overflow-hidden border border-gray-300">
+        <div className="w-full h-full overflow-hidden border border-gray-300">
             <MapContainer 
                 center={defaultPosition}
                 zoom={13}
@@ -26,6 +31,13 @@ export default function Map() {
                     <Marker position={defaultPosition} icon={defaultIcon}>
                         <Popup>Pusat Dunia CBD CILEDUG</Popup>
                     </Marker>
+
+                    {friends.map((friend) => (
+                    <Marker key={friend.id} position={[friend.lat, friend.lng]} icon={defaultIcon}>
+                        <Popup> {friend.name} </Popup>
+                    </Marker>
+                ))}
+
             </MapContainer>
         </div>
     );
