@@ -1,16 +1,11 @@
 "use client";
-import Image from "next/image";
-import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useEffect } from "react";
-
-export interface Friend {
-  id: string;
-  name: string;
-  lat: number;
-  lng: number;
-  isAdmin?: boolean;
-}
+import dynamic from "next/dynamic";
+import { Friend, Place } from "./types/index";
+import { calculateCentroid } from "./utils/centroid";
+import { getNearbyPlaces } from "./utils/overpass";
+import Sidebar from "./components/Sidebar";
 
 const Map = dynamic(() => import("./components/Map"), { 
     ssr: false,
@@ -25,6 +20,10 @@ const Map = dynamic(() => import("./components/Map"), {
 export default function Home() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [inputName, setInputName] = useState<string>("");
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const center = calculateCentroid(friends) || [0, 0];
 
   const handleGetMyLocation = () => {
     if (!navigator.geolocation) {
@@ -32,38 +31,58 @@ export default function Home() {
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
+    const isAdminExist = friends.some((friend) => friend.isAdmin);
+    if (isAdminExist) return;
+
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setFriends((prev) => {
+        if (prev.some((f) => f.isAdmin)) return prev;
+
         const newFriend: Friend = {
           id: crypto.randomUUID(),
           name: inputName || "Saya (Admin)",
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
           isAdmin: true,
         };
 
-        setFriends((prevFriends) => [...prevFriends, newFriend]);
-        setInputName("");
-      },
-      (error) => {
-        console.error("Error getting location:", error);
-      }
-    );
+        return [...prev, newFriend];
+      });
+
+      setInputName("");
+    }, 
+    (error) => {
+      alert("Error getting location: " + error.message);
+    });
   };
 
   useEffect(() => {
     handleGetMyLocation();
   }, []);
 
+  const handleSearch = async () => {
+    if (!center) return alert("Masukkan lokasi terlebih dahulu");
+    setIsLoading(true);
+    try {
+      const nearbyPlaces = await getNearbyPlaces(center[0], center[1]);
+      setPlaces(nearbyPlaces);
+    } catch {
+      alert("Gagal mencari tempat");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row h-screen w-screen overflow-hidden">
-      <aside className="w-full md:w-96 bg-white p-6 z-10 flex flex-col border-b md:border-r border-gray-200 overflow-y-auto max-h-[50vh] md:max-h-full">
-        <h1 className="text-2xl font-bold mb-4 text-indigo-600">tengahan</h1>
-        <div className="space-y-4">
-          {/* input form */}
-          <h2>halo</h2>
-        </div>
-      </aside>
+      <Sidebar
+        inputName={inputName}
+        setInputName={setInputName}
+        onGetLocation={handleGetMyLocation}
+        onSearch={handleSearch}
+        isLoading={isLoading}
+        friends={friends}
+      />
       <main className="flex-1 relative h-[50vh] md:h-full w-full">
         <Map friends={friends}/>
       </main>
