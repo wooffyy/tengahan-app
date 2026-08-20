@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Friend, Place } from "./types/index";
 import { calculateCentroid } from "./utils/centroid";
-import { getNearbyPlaces } from "./utils/overpass";
+import { getNearbyPlaces } from "./utils/places";
 import Sidebar from "./components/Sidebar";
 
 const Map = dynamic(() => import("./components/Map"), { 
@@ -24,6 +24,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const center = calculateCentroid(friends) || [0, 0];
+  console.log(center);
 
   const handleGetMyLocation = () => {
     if (!navigator.geolocation) {
@@ -60,13 +61,25 @@ export default function Home() {
     handleGetMyLocation();
   }, []);
 
+  const handleAddFriend = (name: string, lat: number, lng: number) => {
+    const newFriend: Friend = {
+      id: crypto.randomUUID(),
+      name: name,
+      lat: lat,
+      lng: lng,
+      isAdmin: false,
+    };
+    setFriends((prev) => [...prev, newFriend]);
+  };
+
   const handleSearch = async () => {
     if (!center) return alert("Masukkan lokasi terlebih dahulu");
     setIsLoading(true);
     try {
       const nearbyPlaces = await getNearbyPlaces(center[0], center[1]);
       setPlaces(nearbyPlaces);
-    } catch {
+    } catch (error) {
+      console.error("getNearbyPlaces failed:", error);
       alert("Gagal mencari tempat");
     } finally {
       setIsLoading(false);
@@ -80,6 +93,7 @@ export default function Home() {
         setInputName={setInputName}
         onGetLocation={handleGetMyLocation}
         onSearch={handleSearch}
+        onAddFriend={handleAddFriend}
         isLoading={isLoading}
         friends={friends}
       />
