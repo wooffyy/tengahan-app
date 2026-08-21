@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { Share2, Plus, MapPin } from "lucide-react";
+import { POIToggle } from "./POIToggle";
 
 interface SidebarProps {
   inputName: string;
@@ -16,6 +17,10 @@ interface SidebarProps {
   onAddFriend: (displayName: string, lat: number, lng: number) => void;
   isLoading: boolean;
   friends: Friend[];
+  category: string[];
+  setCategory: (val: string[]) => void;
+  anyInput: string;
+  setAnyInput: (val: string) => void;
 }
 
 export default function Sidebar({
@@ -26,6 +31,10 @@ export default function Sidebar({
   onAddFriend,
   isLoading,
   friends,
+  category,
+  setCategory,
+  anyInput,
+  setAnyInput,
 }: SidebarProps) {
 
   const [addressInput, setAddressInput] = useState("");
@@ -127,7 +136,17 @@ export default function Sidebar({
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-semibold text-muted-foreground mb-2">Daftar Teman ({friends.length})</p>
+        <h2 className="text-sm font-semibold mb-4">Kalian mau ke mana hari ini?</h2>
+        <POIToggle
+          category={category}
+          setCategory={setCategory}
+          anyInput={anyInput}
+          setAnyInput={setAnyInput}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-sm font-semibold mb-2">Daftar Teman ({friends.length})</p>
         {friends.map((f) => (
           <Card key={f.id} className="bg-card">
             <CardContent className="px-3 py-0.5 flex justify-between items-center text-xs">

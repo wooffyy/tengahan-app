@@ -22,6 +22,8 @@ export default function Home() {
   const [inputName, setInputName] = useState<string>("");
   const [places, setPlaces] = useState<Place[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [category, setCategory] = useState<string[]>(["Meal"]);
+  const [anyInput, setAnyInput] = useState<string>("");
 
   const center = calculateCentroid(friends) || [0, 0];
   console.log(center);
@@ -76,7 +78,7 @@ export default function Home() {
     if (!center) return alert("Masukkan lokasi terlebih dahulu");
     setIsLoading(true);
     try {
-      const nearbyPlaces = await getNearbyPlaces(center[0], center[1]);
+      const nearbyPlaces = await getNearbyPlaces(category[0], anyInput, center[0], center[1]);
       setPlaces(nearbyPlaces);
     } catch (error) {
       console.error("getNearbyPlaces failed:", error);
@@ -96,6 +98,10 @@ export default function Home() {
         onAddFriend={handleAddFriend}
         isLoading={isLoading}
         friends={friends}
+        category={category}
+        setCategory={setCategory}
+        anyInput={anyInput}
+        setAnyInput={setAnyInput}
       />
       <main className="flex-1 relative h-[50vh] md:h-full w-full">
         <Map friends={friends}/>
