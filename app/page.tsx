@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Friend, Place } from "./types/index";
 import { calculateCentroid } from "./utils/centroid";
 import { getNearbyPlaces } from "./utils/places";
+import { getRegionName } from "./utils/reverseGeocode";
 import Sidebar from "./components/Sidebar";
 
 const Map = dynamic(() => import("./components/Map"), { 
@@ -24,6 +25,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [category, setCategory] = useState<string[]>(["Meal"]);
   const [anyInput, setAnyInput] = useState<string>("");
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
+  const [regionName, setRegionName] = useState<string>("");
 
   const center = calculateCentroid(friends) || [0, 0];
   console.log(center);
@@ -79,12 +82,15 @@ export default function Home() {
     setIsLoading(true);
     try {
       const nearbyPlaces = await getNearbyPlaces(category[0], anyInput, center[0], center[1]);
+      const regionName = await getRegionName(center[0], center[1]);
+      setRegionName(regionName);
       setPlaces(nearbyPlaces);
     } catch (error) {
       console.error("getNearbyPlaces failed:", error);
       alert("Gagal mencari tempat");
     } finally {
       setIsLoading(false);
+      setHasSearched(true);
     }
   };
 
